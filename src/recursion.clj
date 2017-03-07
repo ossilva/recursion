@@ -162,12 +162,45 @@
         a-seq
         (conj (apply seq-merge (map merge-sort (halve a-seq))))))))
 
+(defn n-monotonics [a-seq]
+  (loop [prev-elem (first a-seq)
+         n 0
+         tail-seq a-seq
+         pred? ==]
+    (let [first-tail (first tail-seq)]
+      (if (or (empty? tail-seq) (not (or (pred? first-tail prev-elem) (= == pred?))))
+       n
+       (recur first-tail (inc n) (rest tail-seq) (if (= pred? ==)
+                                                         (cond
+                                                           (> first-tail prev-elem) >=
+                                                           (< first-tail prev-elem) <=
+                                                           (== first-tail prev-elem) ==)
+                                                         pred?))))))
+
 (defn split-into-monotonics [a-seq]
-  [:-])
+  (if (empty? a-seq)
+    nil
+    (let [n (n-monotonics a-seq)
+          monotonic-head (take n a-seq)]
+      (cons monotonic-head (split-into-monotonics (subvec a-seq n))))))
+
+(defn perm-helper [a-set]
+  (if (singleton? a-set)
+    [(into [] a-set)]
+    (apply concat (for [object a-set]
+       (map #(flatten (cons object %)) (perm-helper (clojure.set/difference a-set #{object})))))))
 
 (defn permutations [a-set]
-  [:-])
+  (if (empty? a-set)
+    [[]]
+    (perm-helper (into #{} a-set))))
 
+(defn ps-helper [b-set]
+  (if (empty? b-set)
+    b-set
+    (cons b-set (flatten (for [object b-set]
+                           [#{object} (ps-helper (clojure.set/difference b-set #{object}))])))))
 (defn powerset [a-set]
-  [:-])
-
+  (if (empty? a-set)
+              #{#{}}
+              (into #{} (ps-helper (into #{} a-set)))))
